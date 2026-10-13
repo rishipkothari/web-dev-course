@@ -1,0 +1,35 @@
+# Runs on every pull request and every push to main.
+# Make "ci" a required status check in the main branch ruleset so a red run blocks merging.
+# No real secrets here: the build gets placeholder values and never touches a database.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+      DATABASE_URL_UNPOOLED: postgresql://placeholder:placeholder@localhost:5432/placeholder
+      BETTER_AUTH_SECRET: placeholder_secret_for_ci_only_not_used_anywhere
+      BETTER_AUTH_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Migrations are consistent
+        run: npx drizzle-kit check
+      - name: Build
+        run: npx next build
