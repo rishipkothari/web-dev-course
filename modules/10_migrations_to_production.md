@@ -26,7 +26,7 @@ If the migration fails, the build fails and the previous deploy keeps serving. P
 1. **Copy `scripts/vercel_build.mjs`** and add `"vercel-build": "node scripts/vercel_build.mjs"` to `package.json` (both in the template).
 2. **Check the variables:** Vercel Production has `DATABASE_URL_UNPOOLED` (production direct string). Preview does not need it.
 3. **Ship the guestbook table:** PR with the migration from module 8 -> CI green -> preview works (it uses development, already migrated) -> squash merge.
-4. **Read the production build log** (Deployments -> the new production deploy -> Building). Find the `[vercel_build] migrate production` line and the SQL drizzle-kit ran.
+4. **Read the production build log** (Deployments -> the new production deploy -> Building). Find the `[vercel_build] migrate production` line and the SQL drizzle-kit ran. If there are no `[vercel_build]` lines at all, Vercel ran the plain `build` script: set Project -> Settings -> Build and Deployment -> Build Command to `npm run vercel-build` and redeploy.
 5. **Confirm** in the Neon console, `production` branch: the table exists and `__drizzle_migrations` has a row.
 
 ## The ordering you must understand

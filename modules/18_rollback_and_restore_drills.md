@@ -16,7 +16,7 @@ minutes: 45
 1. Merge a visible, harmless "bad" change (wrong heading text).
 2. Vercel -> Deployments -> the previous production deploy -> **Instant Rollback**. Production serves the old code within seconds, no rebuild.
 3. Fix forward properly: revert the PR on GitHub (the "Revert" button on the merged PR makes a new PR), merge it.
-4. Note: while rolled back, Vercel pauses automatic production deploys from `main` until you promote again. Read the banner it shows.
+4. Note: after a rollback, Vercel may stop automatically promoting new `main` deploys to production until you undo the rollback. Read the banner on the project page and note what it says in your runbook.
 
 Remember: rollback swaps **code only**. The database keeps whatever migrations ran.
 
