@@ -19,7 +19,7 @@ Course reference (stack facts, limits, settings): https://github.com/rishipkotha
 | Hosting | Vercel |
 | Database | Neon Postgres (`production` root branch, `development` child) |
 | DB access | Drizzle ORM; migrations with drizzle-kit |
-| Auth | Neon Auth (managed Better Auth), Google sign-in; users in the `neon_auth` schema |
+| Auth | Neon Auth (managed Better Auth), email and password plus Google sign-in; users in the `neon_auth` schema |
 | UI | Tailwind CSS + shadcn/ui |
 | Tests | Vitest; Playwright smoke test |
 | Errors | Sentry |

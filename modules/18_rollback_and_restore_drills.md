@@ -34,7 +34,7 @@ Takeaway for the free plan: if you will make a risky change, branch production *
 
 ## Drill 3: rotate a secret (10 minutes)
 
-Pretend the production Google client secret leaked.
+Pretend the production Google client secret leaked (needs module 13b).
 
 1. Google Cloud Console -> APIs & Services -> Credentials -> your OAuth client -> add a new client secret.
 2. Neon Console, `production` branch -> Settings -> Auth -> OAuth providers -> Google -> replace the secret. No Vercel change and no redeploy: Neon holds it.

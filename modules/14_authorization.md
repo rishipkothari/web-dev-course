@@ -25,7 +25,7 @@ Hiding a delete button in the UI is a convenience, not a check. Anyone can send 
 
 1. **db-change:** add `user_id` to `guestbook_entries`, with the same type as the user id in `neon_auth` (module 12 recorded it). Add a real foreign key only if module 12's test showed one works; otherwise the column stays unconstrained and the ownership check below is what protects it. Show the author by joining to Neon's user table in the query. Existing rows have no owner: make it nullable (expand), or delete development's sample rows and reseed. On production, existing rows stay ownerless and simply cannot be deleted by anyone; that is acceptable here.
 2. **Claude builds:** signed-in users can post; entries show the author; a delete action that follows the three-part rule above.
-3. **Second user.** Sign in on localhost with a second Google account (or ask a friend), post an entry.
+3. **Second user.** Create a second account on localhost with a different email (a throwaway address is fine), post an entry.
 
 ## Prove it
 

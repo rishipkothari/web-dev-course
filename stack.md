@@ -30,12 +30,12 @@ The one page to open when you need a setting, a limit, or a reason. Facts that c
 
 Staging is deliberately **not** used yet. It comes back when a project has real users (Nannager). Until then preview deploys do its job.
 
-| Environment | Git branch | Runs on | Neon branch (and its auth) | Google sign-in credentials | Secrets live in |
+| Environment | Git branch | Runs on | Neon branch (and its auth) | Sign-in setup | Secrets live in |
 |---|---|---|---|---|---|
-| Local (your PC) | feature branches | `npm run dev`, `http://localhost:3000` | `development` | Neon's shared development credentials | `.env.local` (gitignored) |
-| Cloud Claude session | feature branches | the container | `development` | Neon's shared development credentials | Cloud environment variables (dev values only) |
-| Preview | any non-`main` branch | Vercel Preview URL | `development` | Neon's shared development credentials; preview URLs allowed by a wildcard trusted domain (section 9) | Vercel **Preview** variables |
-| Production | `main` | Vercel Production URL | `production` | your own Google OAuth client, entered in the Neon Console | Vercel **Production** variables only |
+| Local (your PC) | feature branches | `npm run dev`, `http://localhost:3000` | `development` | email and password: nothing to register; Google: Neon's shared development credentials | `.env.local` (gitignored) |
+| Cloud Claude session | feature branches | the container | `development` | same as local | Cloud environment variables (dev values only) |
+| Preview | any non-`main` branch | Vercel Preview URL | `development` | same as local; preview URLs allowed by a wildcard trusted domain (section 9) | Vercel **Preview** variables |
+| Production | `main` | Vercel Production URL | `production` | email and password: nothing to register (your own SMTP before real users, section 9a); Google: your own OAuth client, entered in the Neon Console | Vercel **Production** variables only |
 
 **Rules that make this safe**
 - Same variable **names** everywhere, different **values**. `.env.example` lists names only and is committed.
@@ -189,12 +189,14 @@ The consequence to remember: the new database shape is live a minute or two **be
 - `src/lib/auth/server.ts`: `createNeonAuth` from `@neondatabase/auth/next/server`, with `baseUrl: process.env.NEON_AUTH_BASE_URL` and `cookies: { secret: process.env.NEON_AUTH_COOKIE_SECRET }`. Export it as `auth`.
 - Route handler `src/app/api/auth/[...path]/route.ts`: `export const { GET, POST } = auth.handler()`.
 - Client `src/lib/auth/client.ts` (`'use client'`): `createAuthClient` from `@neondatabase/auth/next`.
-- Sign in with Google from the client: `authClient.signIn.social({ provider: "google", callbackURL: "/" })`. Sign out: `authClient.signOut()`.
+- Create an account from the client: `authClient.signUp.email({ name, email, password })`. Sign in: `authClient.signIn.email({ email, password })`. Google (module 13b): `authClient.signIn.social({ provider: "google", callbackURL: "/" })`. Sign out: `authClient.signOut()`. Check the `neon-auth` skill for the current method names; the SDK is newer than most training data.
 - Session on the server: `const { data: session } = await auth.getSession()`, then `session?.user`. Pages that read it are dynamic (`export const dynamic = "force-dynamic"`).
 - `proxy.ts` (Next.js 16): `auth.middleware({ loginUrl: "/sign-in" })` with a `matcher` for protected paths. A convenience redirect only: **every protected page and server action still checks the session itself.**
 - Agent skill: `neon-auth` (section 12). The Neon Auth SDK is newer than most AI training data, so the skill matters more here than usual.
 
-**Sign-in method: Google**
+**Sign-in methods: email and password first, then Google (decided 2026-10-14)**
+- **Email and password** is the baseline and needs no outside account. Neon hashes the password and stores it in the `neon_auth` account table. Setup in module 12; email sending in section 9a.
+- **Google** is added beside it in module 13b. Both methods write to the same user table.
 - Neon Auth's built-in OAuth providers are Google, GitHub and Vercel. Custom providers (Yahoo, for example) are not listed, so Yahoo in ff-sandbox is a separate "connect your Yahoo account" flow for API access, not the login.
 - **Development:** Google works with Neon's **shared development credentials**, on by default. Nothing to register. The consent screen shows Neon's name and logo; that is fine for dev.
 - **Production:** your own Google OAuth client (Google Cloud Console -> APIs & Services -> Credentials -> OAuth client ID, type Web application). Its authorized redirect URI is the **production branch's Auth URL** + `/callback/google` (shown in Neon's "Add OAuth provider" dialog). Client id and secret go into the Neon Console on the `production` branch (Settings -> Auth -> OAuth providers), not into Vercel.
@@ -212,13 +214,13 @@ The consequence to remember: the new database shape is live a minute or two **be
 - What "Reset from parent" does to auth settings is not documented (checked 2026-10-14). After a reset, check that `development`'s trusted domains and Allow Localhost are still what you expect.
 - What rotating `NEON_AUTH_COOKIE_SECRET` does to existing sessions is not spelled out in Neon's docs (checked 2026-10-14). Module 12 has you observe it; do not count on it as an emergency sign-out until you have.
 
-### 9a. Email/password and email sending (decided 2026-10-14: not used yet)
+### 9a. Email sending for email/password (decided 2026-10-14: shared dev sender now, own SMTP before real users)
 
-**Decision:** Google sign-in only, for now. Email/password comes in as its own learning step in `cc-tutorial-webapp-1` before Nannager, where real users will expect it.
+**Decision:** email and password is the first sign-in method, with Google added beside it (modules 12, 13, 13b). In development and in the playground, Neon's shared sender is enough. A project with real users needs your own SMTP provider and a domain first. This replaces the earlier decision (same day) to start with Google only.
 
-**Why:** Neon Auth supports email/password, but Neon's shared email sender (`auth@mail.myneon.app`) is for development only: rate-limited, and it sends codes, not verification links. Production needs your own SMTP provider, and a real sender needs a domain you own with DNS records. That is a second vendor, a domain, and DNS for a feature the hobby projects do not need. (Clerk does not avoid this: a Clerk production instance also requires a domain you own, with DNS records.)
+**Why:** Neon's shared email sender (`auth@mail.myneon.app`) is for development only: rate-limited, and it sends codes, not verification links. So development needs nothing extra, but production email (verification, password reset) needs your own SMTP provider, and a real sender needs a domain you own with DNS records. That is a second vendor, a domain, and DNS, which a playground with no real users can postpone. Until then, run with email verification off and accept that anyone can sign up under any address. Not documented by Neon (checked 2026-10-14): how verification and password reset behave through the shared sender. Module 12 has you observe it. (Clerk does not avoid this: a Clerk production instance also requires a domain you own, with DNS records.)
 
-**When you add it (checked 2026-10-14)**
+**When you add your own SMTP (checked 2026-10-14)**
 - Turn on email verification (off by default, and without it anyone can sign up as any address).
 - Provider: **Resend**, through its SMTP interface. Neon Console, per branch: Settings -> Better Auth -> **Custom SMTP provider** (host, port, username, password, sender email, sender name).
 - Resend free tier: 3,000 emails/month, **100/day**, 3 domains, 30-day log retention. Pro is $20/month.
@@ -291,8 +293,8 @@ Install per project, commit them, review each `SKILL.md` before installing (a sk
 | GitHub | Public repos, Actions on public repos, rulesets on public repos | Branch protection on **private** repos | Pro, about $4/month |
 | Vercel | Personal, non-commercial; daily cron; 1 h logs | **Any commercial use**; cron more often than daily | Pro, $20/developer seat/month |
 | Neon | 100 projects, 1 GB each, 6 h history | Storage over 1 GB, longer restore history, (check terms for commercial use) | Launch, usage-based, no minimum |
-| Neon Auth | 60k monthly active users; Google via Neon's shared credentials in dev | More than 60k MAU; your own SMTP for email in production | Neon Launch plan (usage-based) (checked 2026-10-14) |
-| Resend (only when email/password is added, section 9a) | 3,000 emails/month, 100/day, 3 domains | More than 100 emails in a day | Pro, $20/month (checked 2026-10-14) |
+| Neon Auth | 60k monthly active users; email and password, and Google via Neon's shared credentials in dev | More than 60k MAU; your own SMTP for email in production | Neon Launch plan (usage-based) (checked 2026-10-14) |
+| Resend (only when a project needs production email, section 9a) | 3,000 emails/month, 100/day, 3 domains | More than 100 emails in a day | Pro, $20/month (checked 2026-10-14) |
 | Sentry | 5k errors/month, 1 user | More errors, more users | Team plan |
 | Anthropic API | none | first token | per-token; set a monthly spend limit in the Console |
 | Yahoo Fantasy API | free with a developer app | rate limits (undocumented) | - |
@@ -309,7 +311,7 @@ Nannager, if it earns money, needs at minimum Vercel Pro and a Neon terms check.
 | **Better Auth, self-run** | The library under Neon Auth, run inside your own app. Chosen first (2026-10-12), replaced 2026-10-14: you would own rate limiting, email wiring, MFA and patching. Remains the exit route from Neon Auth, and the answer if you ever need a custom Better Auth plugin. |
 | **Clerk** | The most mature hosted auth: polished prebuilt UI, organizations, bot protection, email included. But users live in Clerk, not your database, so SQL joins need a copy kept in sync by webhooks; MFA and removing Clerk branding need Pro ($25/month); production needs a domain you own (checked 2026-10-14). **Re-evaluate for Nannager.** |
 | **Kinde** | Same category as Clerk: hosted auth with its own user store. Clerk, Kinde and Neon Auth are alternatives to each other, not layers. |
-| **Email/password login now** | Needs your own SMTP provider and a domain in production; Google sign-in covers the hobby projects. Deferred to a `cc-tutorial-webapp-1` exercise before Nannager (section 9a). |
+| **Google only, no email/password** | Considered 2026-10-14 and dropped the same day: most real apps offer email and password, and you wanted accounts that do not depend on Google or GitHub. The cost, an SMTP provider and a domain before real users, is postponed, not avoided (section 9a). |
 | **Firebase** | NoSQL (Firestore) throws away your SQL strength; a different mental model from everything else here. |
 | **Auth.js (NextAuth v5)** | Now maintained by the Better Auth team, who recommend Better Auth for new projects. |
 | **Prisma** | Good, but its schema language hides SQL more than Drizzle and its migration tooling is heavier. |
