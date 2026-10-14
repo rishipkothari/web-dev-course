@@ -11,6 +11,8 @@ minutes: 55
 
 **Why:** OAuth is the piece most people treat as magic. You will register the app yourself and watch each redirect, so when it breaks (it will, usually on a callback URL) the error makes sense.
 
+**Why OAuth and not email/password:** Better Auth doesn't send email, so email/password needs an email service and a domain for verification and reset links. That is deferred; see `stack.md` section 9a.
+
 ## The flow in five hops
 
 1. Your app redirects the browser to GitHub with your **client id** and **callback URL**.

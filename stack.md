@@ -195,6 +195,23 @@ The consequence to remember: the new database shape is live a minute or two **be
 - `BETTER_AUTH_URL` must exactly match the URL in the browser, scheme and port included.
 - Changing `BETTER_AUTH_SECRET` logs everyone out. That is how you revoke all sessions in an emergency.
 
+### 9a. Email/password and email sending (decided 2026-10-14: not used yet)
+
+**Decision:** no email provider in the default stack. Sign-in is OAuth only (GitHub in the course template; a project can use the provider it already needs, e.g. Yahoo in ff-sandbox, since that login is also how it reads the league). Email/password login, and the email service it requires, comes in as its own learning step in `cc-tutorial-webapp-1` before Nannager, where real users will expect it.
+
+**Why:** Better Auth does **not** send email. Email/password is only safe with verification and password reset, and both need your code to send mail through a third-party service, plus a domain you own. That is a second vendor, a domain, and DNS records for a feature the hobby projects do not need.
+
+**When you add it (checked against the docs 2026-10-14)**
+- Provider: **Resend**. Free tier: 3,000 emails/month, **100/day**, 3 domains, 30-day log retention. Next tier, Pro, is $20/month.
+- Without a verified domain, Resend sends only from `onboarding@resend.dev` and only to your own account address; anything else is rejected with a 403. Real users need a domain you own with Resend's DNS records added.
+- Testing without spamming yourself: send to `delivered@resend.dev` (or `bounced@` / `complained@`) to simulate outcomes. Placeholder domains like `example.com` are rejected.
+- Better Auth config:
+  - `emailAndPassword: { enabled: true, requireEmailVerification: true, sendResetPassword }`
+  - `emailVerification: { sendVerificationEmail }` (top level, not inside `emailAndPassword`)
+  - Each callback receives `{ user, url, token }` and calls Resend. Don't `await` the send in the request path (timing attacks); on Vercel use `waitUntil`.
+- New variables: `RESEND_API_KEY` (secret, per environment) and a from address such as `EMAIL_FROM`.
+- Verification and reset links are built from `BETTER_AUTH_URL`, so a wrong value there produces emails with links to the wrong environment.
+
 ---
 
 ## 10. Claude Code configuration (per project, committed)
@@ -260,6 +277,7 @@ Install per project, commit them, review each `SKILL.md` before installing (a sk
 | Vercel | Personal, non-commercial; daily cron; 1 h logs | **Any commercial use**; cron more often than daily | Pro, $20/developer seat/month |
 | Neon | 100 projects, 1 GB each, 6 h history | Storage over 1 GB, longer restore history, (check terms for commercial use) | Launch, usage-based, no minimum |
 | Better Auth | Free library | none (self-hosted) | - |
+| Resend (only when email/password is added, section 9a) | 3,000 emails/month, 100/day, 3 domains | More than 100 emails in a day | Pro, $20/month (checked 2026-10-14) |
 | Sentry | 5k errors/month, 1 user | More errors, more users | Team plan |
 | Anthropic API | none | first token | per-token; set a monthly spend limit in the Console |
 | Yahoo Fantasy API | free with a developer app | rate limits (undocumented) | - |
@@ -275,6 +293,8 @@ Nannager, if it earns money, needs at minimum Vercel Pro and a Neon terms check.
 | **Supabase** | Packages auth, database, storage and RLS nicely, but the free tier allows 2 active projects and pauses after a week idle. dev + prod for one app already uses both. Its local dev stack needs Docker. |
 | **Neon Auth** | It is managed Better Auth, and its auth data branches with the database, which is genuinely attractive. Not chosen because hosted auth hides the mechanics this course wants you to see, and it does not support custom Better Auth plugins. Since it is Better Auth underneath, switching later reuses the knowledge. |
 | **Clerk** | Excellent hosted auth with prebuilt UI, but user data lives in Clerk, not your database, and pricing grows with users. |
+| **Kinde** | Same category as Clerk: hosted auth with its own user store. Same reasons. Clerk, Kinde and Better Auth are alternatives to each other, not layers. |
+| **Email/password login now** | Needs an email service and a domain for verification and reset; OAuth covers the hobby projects. Deferred to a `cc-tutorial-webapp-1` exercise before Nannager (section 9a). |
 | **Firebase** | NoSQL (Firestore) throws away your SQL strength; a different mental model from everything else here. |
 | **Auth.js (NextAuth v5)** | Now maintained by the Better Auth team, who recommend Better Auth for new projects. |
 | **Prisma** | Good, but its schema language hides SQL more than Drizzle and its migration tooling is heavier. |
@@ -297,6 +317,10 @@ Nannager, if it earns money, needs at minimum Vercel Pro and a Neon terms check.
 - Better Auth with Next.js: https://www.better-auth.com/docs/integrations/next
 - Better Auth Drizzle adapter: https://www.better-auth.com/docs/adapters/drizzle
 - Better Auth skills: https://better-auth.com/docs/ai-resources/skills
+- Better Auth email and password: https://www.better-auth.com/docs/authentication/email-password (checked 2026-10-14)
+- Resend pricing: https://resend.com/pricing (checked 2026-10-14)
+- Resend testing addresses: https://resend.com/docs/knowledge-base/what-email-addresses-to-use-for-testing (checked 2026-10-14)
+- Resend 403 on the resend.dev domain: https://resend.com/docs/knowledge-base/403-error-resend-dev-domain (checked 2026-10-14)
 - Vercel agent skills: https://github.com/vercel-labs/agent-skills
 - Sentry pricing: https://sentry.io/pricing/
 - Windows 10 consumer ESU end date: https://learn.microsoft.com/en-ca/answers/questions/5805066/windows-esu-does-enrollment-end-on-13-oct-2026-or
