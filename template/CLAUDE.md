@@ -19,7 +19,7 @@ Course reference (stack facts, limits, settings): https://github.com/rishipkotha
 | Hosting | Vercel |
 | Database | Neon Postgres (`production` root branch, `development` child) |
 | DB access | Drizzle ORM; migrations with drizzle-kit |
-| Auth | Better Auth (self-hosted), Drizzle adapter |
+| Auth | Neon Auth (managed Better Auth), Google sign-in; users in the `neon_auth` schema |
 | UI | Tailwind CSS + shadcn/ui |
 | Tests | Vitest; Playwright smoke test |
 | Errors | Sentry |
@@ -70,9 +70,11 @@ Do not swap, add or remove a stack piece without asking. Read `AGENTS.md`: this 
 
 ## Auth and authorization
 
-- Every server action, route handler and protected page checks the session itself with `auth.api.getSession`. The `proxy.ts` cookie check is a convenience redirect, never the security check.
+- Every server action, route handler and protected page checks the session itself with `const { data: session } = await auth.getSession()` (from `src/lib/auth/server.ts`). The `proxy.ts` redirect is a convenience, never the security check.
 - Every query that reads or changes user-owned rows filters by the session user's id on the server. Never trust a user id sent from the browser.
-- New auth tables come from `npx auth@latest generate`, then the normal Drizzle migration flow.
+- The `neon_auth` schema belongs to Neon. Never create, alter or drop anything in it, never add it to Drizzle's schema or `schemaFilter`, and never write to its tables except a session-row cleanup the owner explicitly asks for. Reading it in queries (joins for names and emails) is fine.
+- Auth settings (OAuth providers, trusted domains, email) are per Neon branch and live in the Neon Console. Changing them is an owner task: name the setting and the branch, do not ask for credentials.
+- Use the `neon-auth` skill for auth work; the Neon Auth SDK is newer than your training data.
 
 ---
 

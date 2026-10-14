@@ -24,8 +24,8 @@ Each module is one sitting of 30 to 60 minutes: a little reading, mostly doing, 
 | 09 | [Migrations on development](modules/09_migrations_on_development.md) | 40 | B - Hygiene loop |
 | 10 | [Migrations to production](modules/10_migrations_to_production.md) | 40 | B - Hygiene loop |
 | 11 | [Risky migrations: expand and contract](modules/11_risky_migrations.md) | 50 | B - Hygiene loop |
-| 12 | [Auth with Better Auth (local)](modules/12_auth_better_auth_local.md) | 55 | B - Hygiene loop |
-| 13 | [Auth in production (and previews)](modules/13_auth_in_production.md) | 35 | B - Hygiene loop |
+| 12 | [Auth with Neon Auth (local)](modules/12_auth_neon_auth_local.md) | 50 | B - Hygiene loop |
+| 13 | [Auth in production (and previews)](modules/13_auth_in_production.md) | 45 | B - Hygiene loop |
 | 14 | [Authorization: who may do what](modules/14_authorization.md) | 45 | B - Hygiene loop |
 | 15 | [UI foundation: Tailwind and shadcn/ui](modules/15_ui_tailwind_shadcn.md) | 40 | C - Production readiness |
 | 16 | [Testing, proportionally](modules/16_testing.md) | 50 | C - Production readiness |
@@ -41,6 +41,7 @@ Each module is one sitting of 30 to 60 minutes: a little reading, mostly doing, 
 - **No staging (yet).** Local, cloud and preview share a resettable `development` database branch; production is separate. Staging returns with payments (module 21).
 - **One answer to "who runs prod migrations?":** the Vercel production build, triggered by merging to `main` (module 10).
 - **Public repos.** Free branch protection; secrets never live in git anyway.
+- **Managed auth, users in your own database.** Neon Auth runs sign-in; users are SQL tables in the `neon_auth` schema and branch with the data. Clerk gets a fresh look before Nannager (`stack.md` section 15).
 
 ## Using it from a project
 

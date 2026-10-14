@@ -57,7 +57,7 @@ Then clone any project of yours, `cd` into it, `npm install`, `npm run dev`, and
 | `npm.ps1 cannot be loaded` | Execution policy not set |
 | `ENOENT ... system32\package.json` | Running npm outside the project folder (usually an admin terminal) |
 | Build passes locally, fails on Vercel | Node version mismatch |
-| App starts on port 3001 | Something else holds 3000; stop it, because the local OAuth callback is registered on 3000 |
+| App starts on port 3001 | Something else holds 3000, usually an older `npm run dev` still running. Stop it, so you are not testing a stale copy of the app |
 
 ## A note on Windows 10
 

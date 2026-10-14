@@ -24,7 +24,7 @@ minutes: 45
 1. GitHub: "Use this template" -> new public repo. Clone it.
 2. Squash-only merges; `main` ruleset with required `ci` check (module 6, 7).
 3. Neon: new project; `development` branch; strings into `.env.local` (module 4).
-4. GitHub OAuth apps: `<name> local` and `<name> prod` (modules 12, 13).
+4. Neon Auth on both branches; a Google OAuth client for `production` entered in the Neon Console; trusted domains (modules 12, 13).
 5. `.env.local`: all development values. `npm install`, `npx drizzle-kit migrate`, `npm run dev`, sign in.
 6. Vercel: import the repo; Preview and Production variables; deploy (module 5).
 7. Sign in on production.

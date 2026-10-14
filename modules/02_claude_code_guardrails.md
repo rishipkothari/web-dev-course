@@ -44,7 +44,7 @@ Skills are folders of instructions Claude loads when a task matches their descri
 
 ```powershell
 npx skills add neondatabase/agent-skills --skill neon-postgres -a claude-code
-npx skills add better-auth/skills -a claude-code
+npx skills add neondatabase/agent-skills --skill neon-auth -a claude-code
 npx skills add vercel-labs/agent-skills --skill vercel-react-best-practices -a claude-code
 ```
 

@@ -15,7 +15,7 @@ minutes: 45
 
 Every server action and route handler that touches user-owned data:
 
-1. Gets the session on the server (`auth.api.getSession`). No session -> refuse.
+1. Gets the session on the server (`const { data: session } = await auth.getSession()`). No session -> refuse.
 2. Uses `session.user.id`, never a user id sent from the browser.
 3. Puts that id **in the SQL**: `where(and(eq(guestbook_entries.id, entry_id), eq(guestbook_entries.user_id, session.user.id)))`. Then "not yours" and "does not exist" look the same, which is what you want.
 
@@ -23,9 +23,9 @@ Hiding a delete button in the UI is a convenience, not a check. Anyone can send 
 
 ## Steps
 
-1. **db-change:** add `user_id` to `guestbook_entries`, referencing `user.id`. Existing rows have no owner: make it nullable (expand), or delete development's sample rows and reseed. On production, existing rows stay ownerless and simply cannot be deleted by anyone; that is acceptable here.
+1. **db-change:** add `user_id` to `guestbook_entries`, with the same type as the user id in `neon_auth` (module 12 recorded it). Add a real foreign key only if module 12's test showed one works; otherwise the column stays unconstrained and the ownership check below is what protects it. Show the author by joining to Neon's user table in the query. Existing rows have no owner: make it nullable (expand), or delete development's sample rows and reseed. On production, existing rows stay ownerless and simply cannot be deleted by anyone; that is acceptable here.
 2. **Claude builds:** signed-in users can post; entries show the author; a delete action that follows the three-part rule above.
-3. **Second user.** Make a second GitHub account (or ask a friend), sign in on localhost, post an entry.
+3. **Second user.** Sign in on localhost with a second Google account (or ask a friend), post an entry.
 
 ## Prove it
 

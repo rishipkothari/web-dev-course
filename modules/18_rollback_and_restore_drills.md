@@ -34,12 +34,12 @@ Takeaway for the free plan: if you will make a risky change, branch production *
 
 ## Drill 3: rotate a secret (10 minutes)
 
-Pretend `GITHUB_CLIENT_SECRET` (prod) leaked.
+Pretend the production Google client secret leaked.
 
-1. GitHub -> the prod OAuth app -> generate a new client secret.
-2. Vercel Production -> replace `GITHUB_CLIENT_SECRET` -> redeploy.
+1. Google Cloud Console -> APIs & Services -> Credentials -> your OAuth client -> add a new client secret.
+2. Neon Console, `production` branch -> Settings -> Auth -> OAuth providers -> Google -> replace the secret. No Vercel change and no redeploy: Neon holds it.
 3. Sign in on production: works.
-4. Delete the old secret at GitHub.
+4. Delete the old secret in Google Cloud.
 
 Same pattern for any key: create new, deploy new, verify, revoke old. Never revoke first.
 
